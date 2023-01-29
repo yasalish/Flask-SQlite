@@ -1,0 +1,9 @@
+[
+{"StylistID": 111, "Name": "Manager", "IPAddr": "192.168.1.6", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 123, "Name": "Maryam", "IPAddr": "192.168.1.2", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 456, "Name": "Simin", "IPAddr": "192.168.1.2", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 789, "Name": "Raha", "IPAddr": "192.168.1.2", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 321, "Name": "Sara", "IPAddr": "192.168.1.6", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 654, "Name": "Sanaz", "IPAddr": "192.168.1.2", "QPerson": 0, "QWating": 0, "Status": "Offline"}, 
+{"StylistID": 987, "Name": "Shirin", "IPAddr": "192.168.1.2", "QPerson": 0, "QWating": 0, "Status": "Offline"}
+]
