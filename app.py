@@ -57,15 +57,23 @@ def api_get_job_by_stylist_name(name):
 def api_get_job_by_id(id):
    return jsonify(get_job_by_id(id))
 
-
 @app.route('/stylists', methods=['GET'])
 def api_get_stylists():
     return jsonify(get_stylists())
 
-
 @app.route('/stylists/<stylist_id>', methods=['GET'])
 def api_get_stylist_by_id(stylist_id):
     return jsonify(get_stylist_by_id(stylist_id))
+
+@app.route('/stylists/<card_uid>', methods=['GET'])
+def api_get_stylist_by_carduid(card_uid):
+    print('card_uid=',card_uid)
+    return jsonify(get_stylist_by_carduid(card_uid))
+
+@app.route('/stylists/name/<name>', methods=['GET'])
+def api_get_stylist_by_name(name):
+    print('------------> name=',name)    
+    return jsonify(get_stylist_by_name(name))
 
 @app.route('/stylists/add',  methods = ['POST'])
 def api_add_stylist():
@@ -83,7 +91,18 @@ def api_addall_stylist():
 @app.route('/stylists/update',  methods = ['PUT'])
 def api_update_stylist():
     stylist = request.get_json()
+    print("api_update_stylist=",stylist)
     return jsonify(update_stylist(stylist))
+
+@app.route('/stylists/register/<int:stylist_id>',  methods = ['PUT'])
+def api_register_stylist(stylist_id):
+    stylist=get_stylist_by_id(stylist_id)
+    cardUID = request.get_json()
+    print("api_register_stylist=",stylist,"\t",cardUID)
+    stylist["CardUID"]=cardUID
+    print("api_register_stylist=",stylist,"\t",stylist["CardUID"])
+    update_stylist(stylist)
+    return jsonify(stylist)
 
 @app.route('/stylists/delete/<stylist_id>',  methods = ['DELETE'])
 def api_delete_stylist(stylist_id):
@@ -107,7 +126,21 @@ def api_login(stylist_id):
         if st["StylistID"] == stylist_id:  
             ipadd = request.environ['REMOTE_ADDR']
             st["IPAddr"]=ipadd
-            st["Status"]="NotReady"
+            st["Status"]="غیرآماده"
+            update_stylist(st)
+            return jsonify(st)
+    stfail={"Name": "Unknown"}
+    return jsonify(stfail)
+
+@app.route("/login/<card_uid>", methods= ['GET'])
+def api_login_card_uid(card_uid):
+    print('card_uid=',card_uid)
+    DBStylists=get_stylists()
+    for st in DBStylists:
+        if st["CardUID"] == card_uid:  
+            ipadd = request.environ['REMOTE_ADDR']
+            st["IPAddr"]=ipadd
+            st["Status"]="غیرآماده"
             update_stylist(st)
             return jsonify(st)
     stfail={"Name": "Unknown"}
@@ -118,16 +151,17 @@ def api_logoff(name):
     DBStylists=get_stylists()
     for st in DBStylists:
         if st["Name"] == name:  
-            st["Status"]="Offline"
+            st["Status"]="آفلاین"
             update_stylist(st)
             return jsonify(st)   
 
-@app.route("/login/<name>", methods= ['GET'])
+@app.route("/login/ready/<name>", methods= ['GET'])
 def api_ready(name):
     DBStylists=get_stylists()
     for st in DBStylists:
         if st["Name"] == name:  
-            st["Status"]="Ready"
+            st["Status"]="آماده"
+            print(st)
             update_stylist(st)
             return jsonify(st)      
 
@@ -147,8 +181,8 @@ def api_assign_job(id):
             print(job)
             name=job["Stylist"]
             for st in DBStylists:
-                if (st["Name"]==name and job["Status"]=="Undone"):
-                    job["Status"] = "Assigned"
+                if (st["Name"]==name and job["Status"]=="انجام نشده"):
+                    job["Status"] = "اختصاص داده"
                     job["QNumber"]= st["QPerson"]+1
                     st["QPerson"]= st["QPerson"]+1
                     st["QWating"]= st["QWating"]+job["Duration"]                   
@@ -163,13 +197,13 @@ def api_accept(id):
     DBJobs=get_jobs()
     DBStylists=get_stylists()
     for job in DBJobs:        
-        if (job["ID"] == id and job["Status"]=="Assigned"): 
+        if (job["ID"] == id and job["Status"]=="اختصاص داده"): 
             name=job["Stylist"]
             for st in DBStylists:
-                if (st["Name"]==name and st["Status"]=="Ready"):
+                if (st["Name"]==name and st["Status"]=="آماده"):
                     jobac=job
-                    job["Status"]= "Ongoing"
-                    st["Status"]="Busy"
+                    job["Status"]= "در دست اقدام"
+                    st["Status"]="مشغول"
                     job["QNumber"]=job["QNumber"]-1
                     st["QPerson"]=st["QPerson"]-1
                     job["QWating"]=0 
@@ -177,7 +211,7 @@ def api_accept(id):
     name=jobac["Stylist"]
     print(name)
     for job in DBJobs: 
-        if(job["ID"] != id and job["Status"]=="Assigned" and job["Stylist"]==name):
+        if(job["ID"] != id and job["Status"]=="اختصاص داده" and job["Stylist"]==name):
             job["QNumber"]=job["QNumber"]-1
             print(job)
     for job in DBJobs:
@@ -192,19 +226,19 @@ def api_finish_job(id):
     DBJobs=get_jobs()
     DBStylists=get_stylists()
     for job in DBJobs:
-        if (job["ID"] == id and job["Status"]=="Ongoing"): 
+        if (job["ID"] == id and job["Status"]=="در دست اقدام"): 
             name=job["Stylist"]
             for st in DBStylists:
-                if (st["Name"]==name and st["Status"]=="Busy"):
+                if (st["Name"]==name and st["Status"]=="مشغول"):
                     jobac=job
-                    job["Status"]= "Done"
-                    st["Status"]= "NotReady"
+                    job["Status"]= "اتمام"
+                    st["Status"]= "غیرآماده"
                     job["Finished"]=1
                     st["QWating"]= st["QWating"]-job["Duration"]
                     break
     name=jobac["Stylist"]
     for job in DBJobs: 
-        if(job["ID"] != id and job["Status"]=="Assigned" and job["Stylist"]==name):
+        if(job["ID"] != id and job["Status"]=="اختصاص داده" and job["Stylist"]==name):
             print("#######",jobac["Duration"])
             job["QWating"]=job["QWating"]-jobac["Duration"]
             print(job["QWating"]) 
@@ -241,7 +275,7 @@ def stylist(sock):
         print(stylist)
         DBJobs=get_jobs()
         for job in DBJobs:
-            if (job["Stylist"]==stylist and job["Status"]=="Assigned"):
+            if (job["Stylist"]==stylist and job["Status"]=="اختصاص داده"):
                 print(job)
                 sock.send(job)
                 break

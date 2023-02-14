@@ -10,9 +10,9 @@ def insert_stylist(stylist):
     try:
         conn = connect_to_db()
         cur = conn.cursor()
-        cur.execute("INSERT INTO Stylists (StylistID, Name, IPAddr, QPerson, QWating, Status) VALUES (?, ?, ?, ?, ?, ?)", 
+        cur.execute("INSERT INTO Stylists (StylistID, Name, IPAddr, QPerson, QWating, CardUID, Status) VALUES (?, ?, ?, ?, ?, ?)", 
                     (stylist['StylistID'],stylist['Name'], stylist['IPAddr'],
-                    stylist['QPerson'],stylist['QWating'],stylist['Status']) )
+                    stylist['QPerson'],stylist['QWating'],stylist['CardUID'],stylist['Status']) )
         conn.commit()
         inserted_stylist = get_stylist_by_id(cur.lastrowid)
     except:
@@ -40,6 +40,7 @@ def get_stylists():
             stylist["IPAddr"] = i["IPAddr"]
             stylist["QPerson"] = i["QPerson"]
             stylist["QWating"] = i["QWating"]
+            stylist["CardUID"] = i["CardUID"]
             stylist["Status"] = i["Status"]
             stylists.append(stylist)
 
@@ -48,6 +49,28 @@ def get_stylists():
     print("Stylist: **********>",stylists)
     return stylists
 
+def get_stylist_by_carduid(carduid):
+    stylist = {}
+    try:
+        conn = connect_to_db()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM Stylists WHERE CardUID = ?", 
+                       (carduid,))
+        row = cur.fetchone()
+
+        # convert row object to dictionary
+        stylist["StylistID"] = row["StylistID"]
+        stylist["Name"] = row["Name"]
+        stylist["IPAddr"] = row["IPAddr"]
+        stylist["QPerson"] = row["QPerson"]
+        stylist["QWating"] = row["QWating"]
+        stylist["CardUID"] = row["CardUID"]
+        stylist["Status"] = row["Status"]
+       
+    except:
+        stylist = {}
+    return stylist
 
 def get_stylist_by_id(stylist_id):
     stylist = {}
@@ -65,6 +88,29 @@ def get_stylist_by_id(stylist_id):
         stylist["IPAddr"] = row["IPAddr"]
         stylist["QPerson"] = row["QPerson"]
         stylist["QWating"] = row["QWating"]
+        stylist["CardUID"] = row["CardUID"]
+        stylist["Status"] = row["Status"]
+       
+    except:
+        stylist = {}
+    return stylist
+
+def get_stylist_by_name(name):
+    stylist = {}
+    try:
+        conn = connect_to_db()
+        conn.row_factory = sqlite3.Row
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM Stylists WHERE Name = ?", 
+                       (name,))
+        row = cur.fetchone()
+        # convert row object to dictionary
+        stylist["StylistID"] = row["StylistID"]
+        stylist["Name"] = row["Name"]
+        stylist["IPAddr"] = row["IPAddr"]
+        stylist["QPerson"] = row["QPerson"]
+        stylist["QWating"] = row["QWating"]
+        stylist["CardUID"] = row["CardUID"]
         stylist["Status"] = row["Status"]
        
     except:
@@ -76,9 +122,9 @@ def update_stylist(stylist):
     try:
         conn = connect_to_db()
         cur = conn.cursor()
-        cur.execute("UPDATE Stylists SET Name = ?, IPAddr = ?, QPerson =?, QWating = ?, Status = ? WHERE StylistID =?",  
+        cur.execute("UPDATE Stylists SET Name = ?, IPAddr = ?, QPerson = ?, QWating = ?, CardUID = ?, Status = ? WHERE StylistID =?",  
                      (stylist['Name'], stylist['IPAddr'],stylist['QPerson'],
-                     stylist['QWating'],stylist['Status'],
+                     stylist['QWating'],stylist['CardUID'],stylist['Status'],
                      stylist['StylistID'],))
         conn.commit()
         updated_stylist = get_stylist_by_id(stylist["StylistID"])
